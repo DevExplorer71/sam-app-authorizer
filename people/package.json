@@ -1,0 +1,7 @@
+{
+  "name": "people",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "app.mjs",
+  "dependencies": {}
+}

@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app-authorizer
+
+  Sample SAM Template for sam-app-authorizer
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  AuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: authorizer/
+      Handler: app.handler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      Policies: []
+
+  PeopleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: people/
+      Handler: app.lambdaHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      Events:
+        People:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PeopleApi
+            Path: /people
+            Method: get
+            Auth:
+              Authorizer: LambdaTokenAuthorizer
+
+  PeopleApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: LambdaTokenAuthorizer
+        Authorizers:
+          LambdaTokenAuthorizer:
+            FunctionArn: !GetAtt AuthorizerFunction.Arn
+            Identity:
+              Header: Authorization
+
+Outputs:
+  PeopleApi:
+    Description: "API Gateway endpoint URL for Prod stage for People function"
+    Value: !Sub "https://${PeopleApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/people/"
+  PeopleFunction:
+    Description: "People Lambda Function ARN"
+    Value: !GetAtt PeopleFunction.Arn
+  PeopleFunctionIamRole:
+    Description: "Implicit IAM Role created for People function"
+    Value: !GetAtt PeopleFunctionRole.Arn
