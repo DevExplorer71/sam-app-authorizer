@@ -43,13 +43,11 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
-      Auth:
-        DefaultAuthorizer: LambdaTokenAuthorizer
-        Authorizers:
-          LambdaTokenAuthorizer:
-            FunctionArn: !GetAtt AuthorizerFunction.Arn
-            Identity:
-              Header: Authorization
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: openapi.yaml
 
 Outputs:
   PeopleApi:
